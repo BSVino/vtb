@@ -1,0 +1,32 @@
+{
+	"build_systems":
+	[
+		{
+			"windows":
+			{
+				"cmd":
+				[
+					"$project_path\\test.bat"
+				]
+			},
+			"osx":
+			{
+				"cmd":
+				[
+					"$project_path/test.sh"
+				],
+				"file_regex": "^(..[^:]*):([0-9]+):?([0-9]+)?:? (.*)$"
+			},
+			"encoding": "cp850",
+			"file_regex": "^(.*?)\\(([0-9]+),?([0-9]+)?\\) (.*)",
+			"name": "BuildTests",
+			"working_dir": "${project_path}"
+		}
+	],
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	]
+}

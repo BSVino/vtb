@@ -1,0 +1,8 @@
+.DS_Store
+/*.opensdf
+/*.sdf
+/*.suo
+x64
+Debug
+/ipch
+/*.sublime-workspace

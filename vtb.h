@@ -1,7 +1,9 @@
 /*
 vtb.h - Vino's Tool Box
 
-This code is in the public domain. No warranty is offered or implied. Use this code at your own risk.
+This software is in the public domain. Where that dedication is not
+recognized, you are granted a perpetual, irrevocable license to copy
+and modify this file as you see fit. No warranty is offered or implied.
 
 This header file has a collection of useful utilities that I use often in my
 projects. You'll find most of this stuff in the header of any large project.
@@ -10,19 +12,19 @@ I'm putting it all in one place for code reuse reasons.
 See https://github.com/nothings/stb for the inspiration
 See https://www.youtube.com/watch?v=eAhWIO1Ra6M for the motivation
 
-==============================================================================
-YOU MUST
+COMPILING AND LINKING
+	You must
 
-#define VTB_IMPLEMENTATION
+	#define VTB_IMPLEMENTATION
 
-in exactly one C or C++ file that includes this header, before the include
-like this:
+	in exactly one C or C++ file that includes this header, before the include
+	like this:
 
-#define VTB_IMPLEMENTATION
-#include "vtb.h"
+	#define VTB_IMPLEMENTATION
+	#include "vtb.h"
 
-All other files can be just #include "vtb.h" without the #define
-==============================================================================
+	All other files can be just #include "vtb.h" without the #define
+
 */
 
 #ifndef VTB_H
