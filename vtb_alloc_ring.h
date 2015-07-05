@@ -11,6 +11,7 @@ compelling replacement for a linked list in places where memory locality is
 important. It does not require memory copies and always returns contiguous
 memory blocks. This implementation is not thread safe.
 
+
 COMPILING AND LINKING
 	You must
 
@@ -54,9 +55,9 @@ MEMORY MANAGEMENT
 	management, so if you allocate sizeof(YourStructure)*k you will be able
 	to fit strictly fewer than k YourStructures into the ring buffer. Use
 	vtbar_getheadersize() to account for this: If you allocate
-	(sizeof(YourStructure) + vtbar_getheadersize(vtbra))*k then you will
-	have space for exactly k items in the ring buffer. vtbar_initializeitems() does
-	this for you.
+	(sizeof(YourStructure) + vtbar_getheadersize())*k then you will have space
+	for exactly k items in the ring buffer. vtbar_initializeitems() does this
+	for you.
 
 	Note: Because the algorithm always returns contiguous memory blocks, if you
 	don't have a constant object size and use vtbar_initializeitems, you may
@@ -184,8 +185,8 @@ VTBARDEF int vtbar_getheadersize();
 
 typedef struct
 {
-	int32_t m_length;
-	int32_t m_next; // Index into m_memory
+	int32_t m_length; // Allocation size.
+	int32_t m_next;   // Index into m_memory. Points to the header of the next block.
 } vtb__memory_section_header;
 
 VTBARDEF void vtbar_initialize(vtb_ring_allocator* vtbra, void* memory, int32_t memory_size)
