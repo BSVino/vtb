@@ -50,14 +50,16 @@ int main()
 
 	g_test = "Initial test";
 
-	printf("Header size: %d\n", vtbra_getheadersize());
-
 	vtb_ring_allocator a;
 	char m[1024];
 	vtbra_initialize(&a, m, sizeof(m));
 
+	TEST(vtbra_isusermemory(&a) == 1);
+	TEST(vtbra_getmemorysize(&a) == sizeof(m));
+
 	TEST(vtbra_isempty(&a));
 	TEST(vtbra_getnumallocations(&a) == 0);
+	TEST(vtbra_getsizeallocations(&a) == 0);
 
 	void* memory;
 	int length;
@@ -68,6 +70,7 @@ int main()
 
 	TEST(!vtbra_isempty(&a));
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == 16 + vtbra_getheadersize());
 
 	vtbra_peektail(&a, &memory, &length);
 	TEST(strcmp((char*)memory, test_string1) == 0 && length == 16);
@@ -77,11 +80,13 @@ int main()
 
 	TEST(vtbra_isempty(&a));
 	TEST(vtbra_getnumallocations(&a) == 0);
+	TEST(vtbra_getsizeallocations(&a) == 0);
 
 	strcpy((char*)vtbra_alloc(&a, 16), test_string1);
 
 	TEST(!vtbra_isempty(&a));
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == 16 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	vtbra_peektail(&a, &memory, &length);
 	TEST(strcmp((char*)memory, test_string1) == 0 && length == 16);
@@ -90,6 +95,7 @@ int main()
 
 	TEST(!vtbra_isempty(&a));
 	TEST(vtbra_getnumallocations(&a) == 2);
+	TEST(vtbra_getsizeallocations(&a) == 32 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	vtbra_peektail(&a, &memory, &length);
 	TEST(strcmp((char*)memory, test_string1) == 0 && length == 16);
@@ -99,12 +105,14 @@ int main()
 
 	TEST(!vtbra_isempty(&a));
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == 16 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	vtbra_peektail(&a, &memory, &length);
 	TEST(strcmp((char*)memory, test_string2) == 0 && length == 16);
 
 	TEST(!vtbra_isempty(&a));
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == 16 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	vtbra_freetail(&a, &memory, &length);
 	TEST(strcmp((char*)memory, test_string2) == 0 && length == 16);
@@ -116,50 +124,66 @@ int main()
 
 	TEST(vtbra_isempty(&a));
 	TEST(vtbra_getnumallocations(&a) == 0);
+	TEST(vtbra_getsizeallocations(&a) == 0 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	vtbra_destroy(&a);
 
 	g_test = "Overallocation";
 	vtbra_initialize(&a, m, sizeof(m));
 	TEST(vtbra_getnumallocations(&a) == 0);
+	TEST(vtbra_getsizeallocations(&a) == 0 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	TEST(vtbra_alloc(&a, sizeof(m)*2) == 0);
 	TEST(vtbra_getnumallocations(&a) == 0);
+	TEST(vtbra_getsizeallocations(&a) == 0 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	TEST(vtbra_alloc(&a, sizeof(m)/2) != 0);
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == sizeof(m)/2 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	TEST(vtbra_alloc(&a, sizeof(m)/2) == 0);
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == sizeof(m)/2 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	vtbra_destroy(&a);
 
 	g_test = "Allocating across the break";
 	vtbra_initialize(&a, m, sizeof(m));
 	TEST(vtbra_getnumallocations(&a) == 0);
+	TEST(vtbra_getsizeallocations(&a) == 0 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	TEST(vtbra_alloc(&a, 500) != 0);
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == 500 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	TEST(vtbra_alloc(&a, 500) != 0);
 	TEST(vtbra_getnumallocations(&a) == 2);
+	TEST(vtbra_getsizeallocations(&a) == 1000 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	vtbra_freetail(&a, &memory, &length);
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == 500 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	TEST(vtbra_alloc(&a, 500) != 0);
 	TEST(vtbra_getnumallocations(&a) == 2);
+	TEST(vtbra_getsizeallocations(&a) == 1000 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	vtbra_destroy(&a);
 
 	vtbra_initialize(&a, m, sizeof(m));
 	TEST(vtbra_getnumallocations(&a) == 0);
+	TEST(vtbra_getsizeallocations(&a) == 0 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	TEST(vtbra_alloc(&a, 300) != 0);
 	TEST(vtbra_getnumallocations(&a) == 1);
+	TEST(vtbra_getsizeallocations(&a) == 300 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	TEST(vtbra_alloc(&a, 300) != 0);
 	TEST(vtbra_getnumallocations(&a) == 2);
+	TEST(vtbra_getsizeallocations(&a) == 600 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	TEST(vtbra_alloc(&a, 300) != 0);
 	TEST(vtbra_getnumallocations(&a) == 3);
+	TEST(vtbra_getsizeallocations(&a) == 900 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	vtbra_freetail(&a, &memory, &length);
 	TEST(vtbra_getnumallocations(&a) == 2);
+	TEST(vtbra_getsizeallocations(&a) == 600 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 
 	TEST(vtbra_alloc(&a, 500) == 0);
 	TEST(vtbra_getnumallocations(&a) == 2);
+	TEST(vtbra_getsizeallocations(&a) == 600 + vtbra_getheadersize()*vtbra_getnumallocations(&a));
 	vtbra_destroy(&a);
 
 	vtbra_initialize(&a, m, sizeof(m));
@@ -205,6 +229,8 @@ int main()
 	g_test = "Automatic malloc test";
 
 	vtbra_initializememory(&a, 1024);
+	TEST(vtbra_isusermemory(&a) == 0);
+	TEST(vtbra_getmemorysize(&a) == 1024);
 
 	TEST(vtbra_isempty(&a));
 
@@ -251,6 +277,8 @@ int main()
 	g_test = "Exact number of items test";
 
 	vtbra_initializeitems(&a, 10, 16);
+	TEST(vtbra_isusermemory(&a) == 0);
+	TEST(vtbra_getmemorysize(&a) == (16+vtbra_getheadersize())*10);
 
 	strcpy((char*)vtbra_alloc(&a, 16), test_string1);
 	strcpy((char*)vtbra_alloc(&a, 16), test_string2);

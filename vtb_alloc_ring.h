@@ -86,46 +86,40 @@ ASSERT
 #define VTBARDEF extern
 #endif
 
-#ifdef _MSC_VER
-typedef unsigned char vuint8;
-typedef int           vint32;
-#else
-#include <stdint.h>
-typedef uint8_t vuint8;
-typedef int32_t vint32;
-#endif
+#include <stdint.h> // For uint8_t/int32_t
 
 #define VTB__PRIVATE_MEMBER(type, name) type vtb__##name
 
-// WARNING: Don't directly refer to members of this struct. I reserve
+// WARNING: Don't directly reference members of this struct. I reserve
 // the right to change them from version to version.
-// VTB__PRIVATE_MEMBER is here to discourage you from trying to refer
-// to them.
+// VTB__PRIVATE_MEMBER is here to discourage you from trying to reference
+// them. Use the API procedures provided instead.
 typedef struct
 {
-	VTB__PRIVATE_MEMBER(vuint8*, m_memory);
-	VTB__PRIVATE_MEMBER(vint32, m_memory_size);
+	VTB__PRIVATE_MEMBER(uint8_t*, m_memory);
+	VTB__PRIVATE_MEMBER(int32_t, m_memory_size);
 
 	// m_head/tail_index are indexes into m_memory
-	VTB__PRIVATE_MEMBER(vint32, m_head_index); // Head is the most recently alloc'd section
-	VTB__PRIVATE_MEMBER(vint32, m_tail_index); // Tail is the section about to be freed
+	VTB__PRIVATE_MEMBER(int32_t, m_head_index); // Head is the most recently alloc'd section
+	VTB__PRIVATE_MEMBER(int32_t, m_tail_index); // Tail is the section about to be freed
 
-	VTB__PRIVATE_MEMBER(vint32, m_num_allocations);
+	VTB__PRIVATE_MEMBER(int32_t, m_num_allocations);
+	VTB__PRIVATE_MEMBER(int32_t, m_size_allocations);
 
-	VTB__PRIVATE_MEMBER(vuint8, m_flags); // Currently only contains the free flag.
+	VTB__PRIVATE_MEMBER(uint8_t, m_flags); // Currently only contains the free flag.
 } vtb_ring_allocator;
 
 // Use this initializer if you want VRingAllocator to use the memory that
 // you provide.
-void vtbra_initialize(vtb_ring_allocator* vtbra, void* memory, vint32 memory_size);
+void vtbra_initialize(vtb_ring_allocator* vtbra, void* memory, int32_t memory_size);
 
 // This initializer will allocate memory for you, for convenience.
 // It will be freed when you call Destroy().
-void vtbra_initializememory(vtb_ring_allocator* vtbra, vint32 memory_size);
+void vtbra_initializememory(vtb_ring_allocator* vtbra, int32_t memory_size);
 
 // This initializer will allocate memory for you, for convenience,
 // an amount exactly enough to fit this many items.
-void vtbra_initializeitems(vtb_ring_allocator* vtbra, vint32 items, vint32 sizeof_item);
+void vtbra_initializeitems(vtb_ring_allocator* vtbra, int32_t items, int32_t sizeof_item);
 
 // Deallocates memory.
 void vtbra_destroy(vtb_ring_allocator* vtbra);
@@ -134,19 +128,29 @@ void vtbra_destroy(vtb_ring_allocator* vtbra);
 // If it returns 0, that means there was no space.
 // The item will be placed at the "head" of the list. You will always
 // receive a contiguous block of memory in return.
-void* vtbra_alloc(vtb_ring_allocator* vtbra, vint32 size);
+void* vtbra_alloc(vtb_ring_allocator* vtbra, int32_t size);
 
 // Return the item least recently allocated, but does not free it.
-void vtbra_peektail(vtb_ring_allocator* vtbra, void** start, vint32* length);
+void vtbra_peektail(vtb_ring_allocator* vtbra, void** start, int32_t* length);
 
 // Return and free the item least recently allocated.
-void vtbra_freetail(vtb_ring_allocator* vtbra, void** start, vint32* length);
+void vtbra_freetail(vtb_ring_allocator* vtbra, void** start, int32_t* length);
 
 // Return true if the list is empty, false otherwise.
 int vtbra_isempty(vtb_ring_allocator* vtbra);
 
 // Returns the total number of allocations. Incremented by alloc, decremented by free.
 int vtbra_getnumallocations(vtb_ring_allocator* vtbra);
+
+// Returns the total size of all allocations. Incremented by alloc, decremented by free.
+int vtbra_getsizeallocations(vtb_ring_allocator* vtbra);
+
+// Returns the total amount of memory available.
+int vtbra_getmemorysize(vtb_ring_allocator* vtbra);
+
+// Returns 1 when the allocator is using memory passed into vtbra_initialize, 0 otherwise.
+// When returning 1, the allocator will not free when vtbra_destroy is called. When returning 0, it will.
+int vtbra_isusermemory(vtb_ring_allocator* vtbra);
 
 // Returns the size of the header structure used for state management.
 // Exactly one such structure is created for each allocation, packed
@@ -178,23 +182,24 @@ static int vtbra_getheadersize();
 
 typedef struct
 {
-	vint32 m_length;
-	vint32 m_next; // Index into m_memory
+	int32_t m_length;
+	int32_t m_next; // Index into m_memory
 } vtb__memory_section_header;
 
-void vtbra_initialize(vtb_ring_allocator* vtbra, void* memory, vint32 memory_size)
+void vtbra_initialize(vtb_ring_allocator* vtbra, void* memory, int32_t memory_size)
 {
 	VTBAR__CHECK(memory);
 	VTBAR__CHECK(memory_size > sizeof(vtb__memory_section_header) && memory_size < 99999999);
 
-	vtbra->vtb__m_memory = (vuint8*)memory;
+	vtbra->vtb__m_memory = (uint8_t*)memory;
 	vtbra->vtb__m_memory_size = memory_size;
 	vtbra->vtb__m_head_index = vtbra->vtb__m_tail_index = -1;
 	vtbra->vtb__m_flags = 0;
 	vtbra->vtb__m_num_allocations = 0;
+	vtbra->vtb__m_size_allocations = 0;
 }
 
-void vtbra_initializememory(vtb_ring_allocator* vtbra, vint32 memory_size)
+void vtbra_initializememory(vtb_ring_allocator* vtbra, int32_t memory_size)
 {
 #ifndef VTBAR_NO_MALLOC
 	VTBAR__CHECK(memory_size > sizeof(vtb__memory_section_header) && memory_size < 99999999);
@@ -207,7 +212,7 @@ void vtbra_initializememory(vtb_ring_allocator* vtbra, vint32 memory_size)
 #endif
 }
 
-void vtbra_initializeitems(vtb_ring_allocator* vtbra, vint32 items, vint32 sizeof_item)
+void vtbra_initializeitems(vtb_ring_allocator* vtbra, int32_t items, int32_t sizeof_item)
 {
 #ifndef VTBAR_NO_MALLOC
 	VTBAR__CHECK(items > 0 && items < 99999999);
@@ -235,7 +240,7 @@ void vtbra_destroy(vtb_ring_allocator* vtbra)
 	vtbra->vtb__m_memory = 0;
 }
 
-void* vtbra_alloc(vtb_ring_allocator* vtbra, vint32 size)
+void* vtbra_alloc(vtb_ring_allocator* vtbra, int32_t size)
 {
 	VTBAR__CHECK(size > 0);
 	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
@@ -250,6 +255,7 @@ void* vtbra_alloc(vtb_ring_allocator* vtbra, vint32 size)
 		}
 
 		vtbra->vtb__m_num_allocations++;
+		vtbra->vtb__m_size_allocations += size + sizeof(vtb__memory_section_header);
 
 		vtbra->vtb__m_head_index = vtbra->vtb__m_tail_index = 0;
 
@@ -268,6 +274,7 @@ void* vtbra_alloc(vtb_ring_allocator* vtbra, vint32 size)
 	if (vtbra->vtb__m_head_index + header->m_length + 2*sizeof(vtb__memory_section_header) + size <= limit)
 	{
 		vtbra->vtb__m_num_allocations++;
+		vtbra->vtb__m_size_allocations += size + sizeof(vtb__memory_section_header);
 
 		vtbra->vtb__m_head_index += sizeof(vtb__memory_section_header) + header->m_length;
 		vtb__memory_section_header* new_header = (vtb__memory_section_header*)&vtbra->vtb__m_memory[vtbra->vtb__m_head_index];
@@ -283,6 +290,7 @@ void* vtbra_alloc(vtb_ring_allocator* vtbra, vint32 size)
 	else if (vtbra->vtb__m_head_index >= vtbra->vtb__m_tail_index && sizeof(vtb__memory_section_header) + size <= vtbra->vtb__m_tail_index)
 	{
 		vtbra->vtb__m_num_allocations++;
+		vtbra->vtb__m_size_allocations += size + sizeof(vtb__memory_section_header);
 
 		vtbra->vtb__m_head_index = 0;
 
@@ -299,7 +307,7 @@ void* vtbra_alloc(vtb_ring_allocator* vtbra, vint32 size)
 	return 0;
 }
 
-void vtbra_peektail(vtb_ring_allocator* vtbra, void** start, vint32* length)
+void vtbra_peektail(vtb_ring_allocator* vtbra, void** start, int32_t* length)
 {
 	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
 
@@ -312,13 +320,13 @@ void vtbra_peektail(vtb_ring_allocator* vtbra, void** start, vint32* length)
 
 	VTBAR__ASSERT(vtbra->vtb__m_tail_index >= 0);
 
-	vuint8* memory = &vtbra->vtb__m_memory[vtbra->vtb__m_tail_index];
+	uint8_t* memory = &vtbra->vtb__m_memory[vtbra->vtb__m_tail_index];
 	vtb__memory_section_header* header = (vtb__memory_section_header*)memory;
 	*length = header->m_length;
 	*start = (void*)(header+1);
 }
 
-void vtbra_freetail(vtb_ring_allocator* vtbra, void** start, vint32* length)
+void vtbra_freetail(vtb_ring_allocator* vtbra, void** start, int32_t* length)
 {
 	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
 
@@ -346,6 +354,7 @@ void vtbra_freetail(vtb_ring_allocator* vtbra, void** start, vint32* length)
 		vtbra->vtb__m_head_index = vtbra->vtb__m_tail_index = -1;
 
 	vtbra->vtb__m_num_allocations--;
+	vtbra->vtb__m_size_allocations -= header->m_length + sizeof(vtb__memory_section_header);
 }
 
 int vtbra_isempty(vtb_ring_allocator* vtbra)
@@ -360,6 +369,27 @@ int vtbra_getnumallocations(vtb_ring_allocator* vtbra)
 	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
 
 	return vtbra->vtb__m_num_allocations;
+}
+
+int vtbra_getsizeallocations(vtb_ring_allocator* vtbra)
+{
+	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
+
+	return vtbra->vtb__m_size_allocations;
+}
+
+int vtbra_getmemorysize(vtb_ring_allocator* vtbra)
+{
+	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
+
+	return vtbra->vtb__m_memory_size;
+}
+
+int vtbra_isusermemory(vtb_ring_allocator* vtbra)
+{
+	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
+
+	return !vtbra->vtb__m_flags;
 }
 
 int vtbra_getheadersize()
