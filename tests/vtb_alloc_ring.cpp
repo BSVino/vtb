@@ -48,6 +48,10 @@ int main()
 	const char* test_string1 = "abcd1234aoeu";
 	const char* test_string2 = "aoeulcrg1234";
 
+	void* memory;
+	int length;
+	int p;
+
 	g_test = "Initial test";
 
 	vtb_ring_allocator a;
@@ -61,8 +65,6 @@ int main()
 	TEST(vtbar_getnumallocations(&a) == 0);
 	TEST(vtbar_getsizeallocations(&a) == 0);
 
-	void* memory;
-	int length;
 	vtbar_peektail(&a, &memory, &length);
 	TEST(!memory && !length);
 
@@ -128,6 +130,24 @@ int main()
 
 	vtbar_destroy(&a);
 
+	g_test = "Alignment";
+	vtbar_initialize(&a, m, sizeof(m));
+	TEST(vtbar_getnumallocations(&a) == 0);
+
+	p = (size_t)(int*)vtbar_alloc(&a, 1) % sizeof(size_t);
+	TEST(p == 0);
+	TEST(vtbar_getnumallocations(&a) == 1);
+
+	p = (size_t)(int*)vtbar_alloc(&a, 2) % sizeof(size_t);
+	TEST(p == 0);
+	TEST(vtbar_getnumallocations(&a) == 2);
+
+	p = (size_t)(int*)vtbar_alloc(&a, 3) % sizeof(size_t);
+	TEST(p == 0);
+	TEST(vtbar_getnumallocations(&a) == 3);
+
+	vtbar_destroy(&a);
+
 	g_test = "Overallocation";
 	vtbar_initialize(&a, m, sizeof(m));
 	TEST(vtbar_getnumallocations(&a) == 0);
@@ -150,40 +170,40 @@ int main()
 	vtbar_initialize(&a, m, sizeof(m));
 	TEST(vtbar_getnumallocations(&a) == 0);
 	TEST(vtbar_getsizeallocations(&a) == 0 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
-	TEST(vtbar_alloc(&a, 500) != 0);
+	TEST(vtbar_alloc(&a, 496) != 0);
 	TEST(vtbar_getnumallocations(&a) == 1);
-	TEST(vtbar_getsizeallocations(&a) == 500 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
-	TEST(vtbar_alloc(&a, 500) != 0);
+	TEST(vtbar_getsizeallocations(&a) == 496 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_alloc(&a, 496) != 0);
 	TEST(vtbar_getnumallocations(&a) == 2);
-	TEST(vtbar_getsizeallocations(&a) == 1000 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_getsizeallocations(&a) == 992 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
 	vtbar_freetail(&a, &memory, &length);
 	TEST(vtbar_getnumallocations(&a) == 1);
-	TEST(vtbar_getsizeallocations(&a) == 500 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_getsizeallocations(&a) == 496 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
 
-	TEST(vtbar_alloc(&a, 500) != 0);
+	TEST(vtbar_alloc(&a, 496) != 0);
 	TEST(vtbar_getnumallocations(&a) == 2);
-	TEST(vtbar_getsizeallocations(&a) == 1000 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_getsizeallocations(&a) == 992 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
 	vtbar_destroy(&a);
 
 	vtbar_initialize(&a, m, sizeof(m));
 	TEST(vtbar_getnumallocations(&a) == 0);
 	TEST(vtbar_getsizeallocations(&a) == 0 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
-	TEST(vtbar_alloc(&a, 300) != 0);
+	TEST(vtbar_alloc(&a, 304) != 0);
 	TEST(vtbar_getnumallocations(&a) == 1);
-	TEST(vtbar_getsizeallocations(&a) == 300 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
-	TEST(vtbar_alloc(&a, 300) != 0);
+	TEST(vtbar_getsizeallocations(&a) == 304 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_alloc(&a, 304) != 0);
 	TEST(vtbar_getnumallocations(&a) == 2);
-	TEST(vtbar_getsizeallocations(&a) == 600 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
-	TEST(vtbar_alloc(&a, 300) != 0);
+	TEST(vtbar_getsizeallocations(&a) == 608 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_alloc(&a, 304) != 0);
 	TEST(vtbar_getnumallocations(&a) == 3);
-	TEST(vtbar_getsizeallocations(&a) == 900 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_getsizeallocations(&a) == 912 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
 	vtbar_freetail(&a, &memory, &length);
 	TEST(vtbar_getnumallocations(&a) == 2);
-	TEST(vtbar_getsizeallocations(&a) == 600 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_getsizeallocations(&a) == 608 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
 
-	TEST(vtbar_alloc(&a, 500) == 0);
+	TEST(vtbar_alloc(&a, 496) == 0);
 	TEST(vtbar_getnumallocations(&a) == 2);
-	TEST(vtbar_getsizeallocations(&a) == 600 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
+	TEST(vtbar_getsizeallocations(&a) == 608 + vtbar_getheadersize()*vtbar_getnumallocations(&a));
 	vtbar_destroy(&a);
 
 	vtbar_initialize(&a, m, sizeof(m));
@@ -197,31 +217,31 @@ int main()
 
 	g_test = "Allocating after the break";
 	vtbar_initialize(&a, m, sizeof(m));
-	TEST(vtbar_alloc(&a, 500) != 0);
-	TEST(vtbar_alloc(&a, 500) != 0);
+	TEST(vtbar_alloc(&a, 496) != 0);
+	TEST(vtbar_alloc(&a, 496) != 0);
 	vtbar_freetail(&a, &memory, &length);
-	TEST(length == 500);
+	TEST(length == 496);
 
-	TEST(vtbar_alloc(&a, 100) != 0);
-	TEST(vtbar_alloc(&a, 100) != 0);
-	TEST(vtbar_alloc(&a, 100) != 0);
-	TEST(vtbar_alloc(&a, 100) != 0);
+	TEST(vtbar_alloc(&a, 96) != 0);
+	TEST(vtbar_alloc(&a, 96) != 0);
+	TEST(vtbar_alloc(&a, 96) != 0);
+	TEST(vtbar_alloc(&a, 96) != 0);
 	vtbar_freetail(&a, &memory, &length);
-	TEST(length == 500);
+	TEST(length == 496);
 	vtbar_freetail(&a, &memory, &length);
-	TEST(length == 100);
+	TEST(length == 96);
 	vtbar_freetail(&a, &memory, &length);
-	TEST(length == 100);
+	TEST(length == 96);
 	vtbar_freetail(&a, &memory, &length);
-	TEST(length == 100);
-	TEST(vtbar_alloc(&a, 100) != 0);
-	TEST(vtbar_alloc(&a, 100) != 0);
+	TEST(length == 96);
+	TEST(vtbar_alloc(&a, 96) != 0);
+	TEST(vtbar_alloc(&a, 96) != 0);
 	vtbar_freetail(&a, &memory, &length);
-	TEST(length == 100);
+	TEST(length == 96);
 	vtbar_freetail(&a, &memory, &length);
-	TEST(length == 100);
+	TEST(length == 96);
 	vtbar_freetail(&a, &memory, &length);
-	TEST(length == 100);
+	TEST(length == 96);
 
 	vtbar_destroy(&a);
 

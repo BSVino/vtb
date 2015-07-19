@@ -193,6 +193,7 @@ VTBARDEF void vtbar_initialize(vtb_ring_allocator* vtbra, void* memory, int32_t 
 {
 	VTBAR__CHECK(memory);
 	VTBAR__CHECK(memory_size > sizeof(vtb__memory_section_header) && memory_size < 99999999);
+	VTBAR__CHECK(((size_t)(size_t*)memory) % sizeof(size_t) == 0); // Can't handle unaligned memory.
 
 	vtbra->vtb__m_memory = (uint8_t*)memory;
 	vtbra->vtb__m_memory_size = memory_size;
@@ -247,6 +248,9 @@ VTBARDEF void* vtbar_alloc(vtb_ring_allocator* vtbra, int32_t size)
 {
 	VTBAR__CHECK(size > 0);
 	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
+
+	if (size%sizeof(size_t) != 0)
+		size += sizeof(size_t) - size%sizeof(size_t);
 
 	if (vtbra->vtb__m_head_index < 0)
 	{
