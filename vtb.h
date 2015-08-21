@@ -186,7 +186,7 @@ VPRAGMA_WARNING_POP \
 		static bool seen = false; \
 		if (!seen) { \
 			seen = true; \
-			TMsg("STUBBED: " x "\n"); \
+			vtb_debug_print("STUBBED: " x "\n"); \
 		} \
 	} while (false); \
 
