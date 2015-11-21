@@ -87,6 +87,8 @@ VTBDEF void vtb_debug_print(const char* text);
 
 #ifdef _DEBUG
 
+#include <stdio.h>
+
 #define VAssert(x) \
 do { \
 	VPRAGMA_WARNING_PUSH \
@@ -94,7 +96,9 @@ do { \
 	if (!(x)) \
 	VPRAGMA_WARNING_POP \
 	{ \
-		vtb_debug_print("Assert failed: " #x "\n"); \
+		char buf[1024]; \
+		sprintf(buf, "Assert failed: %s (%s:%d)\n", #x, __FILE__, __LINE__); \
+		vtb_debug_print(buf); \
 		VDebugBreak(); \
 	} \
 	VPRAGMA_WARNING_PUSH \
@@ -260,6 +264,13 @@ inline int vmax(int a, int b)
 // VArraySize(name) will return size.
 // Note: It only works on the original array, not on a pointer to that array.
 #define VArraySize(x) (sizeof(x)/sizeof(x[0]))
+
+// Rounds x up to the nearest multiple of n. Useful for aligning memory.
+inline int VAlign(int x, int n)
+{
+	int over = x%n;
+	return over?(x+n-over):x;
+}
 
 #endif // VTB_H
 
