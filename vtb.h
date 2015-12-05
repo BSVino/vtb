@@ -272,6 +272,21 @@ inline int VAlign(int x, int n)
 	return over?(x+n-over):x;
 }
 
+// Rounds v up to the next highest multiple of 2.
+inline int VPo2(int v)
+{
+	// From https://graphics.stanford.edu/~seander/bithacks.html#RoundUpPowerOf2
+	v--;
+	v |= v >> 1;
+	v |= v >> 2;
+	v |= v >> 4;
+	v |= v >> 8;
+	v |= v >> 16;
+	v++;
+
+	return v;
+}
+
 #endif // VTB_H
 
 
