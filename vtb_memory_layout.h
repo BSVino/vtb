@@ -46,17 +46,24 @@ ASSERT
 
 struct VTBML_Entry
 {
-	int m_size;
+	int m_size;   // The amount of memory 
 	int m_offset;
+	int m_level;
 };
 
-#define VTBML_BEGIN(StructName, Identifier) \
+#define VTBML_USE_SUBSTRUCT(Identifier, SubStructName) \
+	struct SubStructName Identifier##_##SubStructName##_instance; \
+
+#define VTBML_BEGIN(Identifier, StructName) \
 	struct StructName Identifier##_instance; \
 	VTBML_Entry Identifier##_entries[] = { \
 		{ sizeof(StructName), 0 }, \
 
 #define VTBML_ENTRY(Identifier, FieldName, Count) \
-		{ (int)(sizeof(Identifier##_instance.FieldName)*(Count)), (int)((char*)((void*)&Identifier##_instance.FieldName)-(char*)(&Identifier##_instance)) },
+		{ (int)(sizeof(Identifier##_instance.FieldName)*(Count)), (int)((char*)((void*)&Identifier##_instance.FieldName)-(char*)(&Identifier##_instance)), 0 },
+
+#define VTBML_SUB_ENTRY(Identifier, SubStructName, FieldName, Count, SubLevel) \
+		{ (int)(sizeof(Identifier##_##SubStructName##_instance.FieldName)*(Count)), (int)((char*)((void*)&Identifier##_##SubStructName##_instance.FieldName)-(char*)(&Identifier##_##SubStructName##_instance)), SubLevel },
 
 #define VTBML_END() \
 	}; \
@@ -69,6 +76,9 @@ struct VTBML_Entry
 
 VTBMLDEF int vtbml_get_memory_required(int num_entries, struct VTBML_Entry* entries);
 VTBMLDEF void* vtbml_layout_memory(int num_entries, struct VTBML_Entry* entries, void* memory);
+
+// This is a debug 
+VTBMLDEF void vtbml_check_layout_table(int num_entries, struct VTBML_Entry* entries);
 
 #ifndef VArraySize
 #define VArraySize(x) (sizeof(x)/sizeof(x[0]))
@@ -102,15 +112,74 @@ VTBMLDEF int vtbml_get_memory_required(int num_entries, struct VTBML_Entry* entr
 	return r;
 }
 
+void vtbml_check_layout_table_level(int num_entries, struct VTBML_Entry* entries, int level, int start)
+{
+	// Shitty n^2 algorithm just for debug checking
+	for (int k = start; entries[k].m_level == level && k < num_entries; k++)
+	{
+		for (int i = k+1; i < num_entries; i++)
+			// If you hit this it means you have a duplicate field.
+			// That is bad and shouldn't happen. It's probably a
+			// copy/paste error.
+			VTBML__CHECK(entries[k].m_offset != entries[i].m_offset);
+	}
+}
+
+VTBMLDEF void vtbml_check_layout_table(int num_entries, struct VTBML_Entry* entries)
+{
+	// Shitty n^2 algorithm just for debug checking
+	for (int k = 1; k < num_entries; k++)
+	{
+		if (entries[k].m_level)
+			vtbml_check_layout_table_level(num_entries, entries, entries[k].m_level, k);
+		else
+		{
+			for (int i = k+1; i < num_entries; i++)
+			{
+				if (entries[i].m_level == 0)
+					// If you hit this it means you have a duplicate field.
+					// That is bad and shouldn't happen. It's probably a
+					// copy/paste error.
+					VTBML__CHECK(entries[k].m_offset != entries[i].m_offset);
+			}
+		}
+	}
+}
+
 VTBMLDEF void* vtbml_layout_memory(int num_entries, struct VTBML_Entry* entries, void* memory)
 {
+#ifdef _DEBUG
+	vtbml_check_layout_table(num_entries, entries);
+#endif
+
 	// First entry is the struct itself
 	int current = entries[0].m_size;
 	char* memory_char = (char*)memory;
 
 	for (int k = 1; k < num_entries; k++)
 	{
-		char** pointer = (char**)(memory_char + entries[k].m_offset);
+		int level = 0;
+
+		char* struct_pointer = memory_char;
+
+		while (level < entries[k].m_level)
+		{
+			int i;
+			// Look for the next higher level
+			for (i = k-1; i >= 0; i++)
+			{
+				if (entries[i].m_level == level)
+					break;
+			}
+
+			VTBML__ASSERT(i >= 0);
+
+			struct_pointer = (char*)(struct_pointer + entries[i].m_offset);
+
+			level++;
+		}
+
+		char** pointer = (char**)(struct_pointer + entries[k].m_offset);
 		*pointer = memory_char + current;
 		current += entries[k].m_size;
 	}
