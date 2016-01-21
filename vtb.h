@@ -227,6 +227,16 @@ inline int vmax(int a, int b)
 	return (a > b) ? a : b;
 }
 
+inline long vmin(long a, long b)
+{
+	return (a < b) ? a : b;
+}
+
+inline long vmax(long a, long b)
+{
+	return (a > b) ? a : b;
+}
+
 
 
 

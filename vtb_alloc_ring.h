@@ -249,20 +249,20 @@ VTBARDEF void* vtbar_alloc(vtb_ring_allocator* vtbra, int32_t size)
 	VTBAR__CHECK(size > 0);
 	VTBAR__CHECK(vtbra->vtb__m_memory); // Call initialize first
 
-	if (size%sizeof(size_t) != 0)
-		size += sizeof(size_t) - size%sizeof(size_t);
+	if (size%(int32_t)sizeof(size_t) != 0)
+		size += (int32_t)sizeof(size_t) - size%(int32_t)sizeof(size_t);
 
 	if (vtbra->vtb__m_head_index < 0)
 	{
 		// This is the first block allocated.
-		if (sizeof(vtb__memory_section_header) + size > vtbra->vtb__m_memory_size)
+		if ((int32_t)sizeof(vtb__memory_section_header) + size > vtbra->vtb__m_memory_size)
 		{
 			VTBAR__ASSERT(false);
 			return 0;
 		}
 
 		vtbra->vtb__m_num_allocations++;
-		vtbra->vtb__m_size_allocations += size + sizeof(vtb__memory_section_header);
+		vtbra->vtb__m_size_allocations += size + (int32_t)sizeof(vtb__memory_section_header);
 
 		vtbra->vtb__m_head_index = vtbra->vtb__m_tail_index = 0;
 
@@ -278,12 +278,12 @@ VTBARDEF void* vtbar_alloc(vtb_ring_allocator* vtbra, int32_t size)
 		limit = vtbra->vtb__m_tail_index;
 
 	vtb__memory_section_header* header = (vtb__memory_section_header*)&vtbra->vtb__m_memory[vtbra->vtb__m_head_index];
-	if (vtbra->vtb__m_head_index + header->m_length + 2*sizeof(vtb__memory_section_header) + size <= limit)
+	if (vtbra->vtb__m_head_index + header->m_length + 2*(int)sizeof(vtb__memory_section_header) + size <= limit)
 	{
 		vtbra->vtb__m_num_allocations++;
-		vtbra->vtb__m_size_allocations += size + sizeof(vtb__memory_section_header);
+		vtbra->vtb__m_size_allocations += size + (int)sizeof(vtb__memory_section_header);
 
-		vtbra->vtb__m_head_index += sizeof(vtb__memory_section_header) + header->m_length;
+		vtbra->vtb__m_head_index += (int)sizeof(vtb__memory_section_header) + header->m_length;
 		vtb__memory_section_header* new_header = (vtb__memory_section_header*)&vtbra->vtb__m_memory[vtbra->vtb__m_head_index];
 
 		new_header->m_length = size;
@@ -294,10 +294,10 @@ VTBARDEF void* vtbar_alloc(vtb_ring_allocator* vtbra, int32_t size)
 		return (void*)(new_header+1);
 	}
 	// Not enough room at the end. Is there enough room at the beginning?
-	else if (vtbra->vtb__m_head_index >= vtbra->vtb__m_tail_index && sizeof(vtb__memory_section_header) + size <= vtbra->vtb__m_tail_index)
+	else if (vtbra->vtb__m_head_index >= vtbra->vtb__m_tail_index && (int)sizeof(vtb__memory_section_header) + size <= vtbra->vtb__m_tail_index)
 	{
 		vtbra->vtb__m_num_allocations++;
-		vtbra->vtb__m_size_allocations += size + sizeof(vtb__memory_section_header);
+		vtbra->vtb__m_size_allocations += size + (int)sizeof(vtb__memory_section_header);
 
 		vtbra->vtb__m_head_index = 0;
 
@@ -361,7 +361,7 @@ VTBARDEF void vtbar_freetail(vtb_ring_allocator* vtbra, void** start, int32_t* l
 		vtbra->vtb__m_head_index = vtbra->vtb__m_tail_index = -1;
 
 	vtbra->vtb__m_num_allocations--;
-	vtbra->vtb__m_size_allocations -= header->m_length + sizeof(vtb__memory_section_header);
+	vtbra->vtb__m_size_allocations -= header->m_length + (int)sizeof(vtb__memory_section_header);
 }
 
 VTBARDEF int vtbar_isempty(vtb_ring_allocator* vtbra)
