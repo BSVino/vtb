@@ -217,12 +217,12 @@ VPRAGMA_WARNING_POP \
 
 
 
-inline int vmin(int a, int b)
+inline long vmin(long a, long b)
 {
 	return (a < b) ? a : b;
 }
 
-inline int vmax(int a, int b)
+inline long vmax(long a, long b)
 {
 	return (a > b) ? a : b;
 }
@@ -287,6 +287,42 @@ inline int VPo2(int v)
 	return v;
 }
 
+
+// A snprintf implementation for VS versions before 2015.
+// From http://stackoverflow.com/questions/2915672/snprintf-and-visual-studio-2010
+#if defined(_MSC_VER) && _MSC_VER < 1900
+
+#include <stdarg.h>
+
+inline int vtb__vsnprintf(char* outBuf, size_t size, const char* format, va_list ap)
+{
+    int count = -1;
+
+    if (size != 0)
+        count = _vsnprintf_s(outBuf, size, _TRUNCATE, format, ap);
+    if (count == -1)
+        count = _vscprintf(format, ap);
+
+    return count;
+}
+
+inline int vtb__snprintf(char *outBuf, size_t size, const char *format, ...)
+{
+    int count;
+    va_list ap;
+
+    va_start(ap, format);
+    count = vtb__vsnprintf(outBuf, size, format, ap);
+    va_end(ap);
+
+    return count;
+}
+
+#define snprintf vtb__snprintf
+#define vsnprintf vtb__vsnprintf
+
+#endif
+
 #endif // VTB_H
 
 
@@ -299,6 +335,7 @@ VTBDEF void vtb_debug_print(const char* text)
 	__android_log_print(ANDROID_LOG_INFO, "Debug", "%s", text);
 }
 #elif _MSC_VER
+#include <windows.h>
 VTBDEF void vtb_debug_print(const char* text)
 {
 	OutputDebugStringA(text);

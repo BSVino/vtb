@@ -212,6 +212,8 @@ VTBARDEF void vtbar_initializememory(vtb_ring_allocator* vtbra, int32_t memory_s
 
 	vtbra->vtb__m_flags = 1;
 #else
+	vtbra = vtbra;
+	memory_size = memory_size;
 	VTBAR__CHECK(false);
 #endif
 }
@@ -227,6 +229,9 @@ VTBARDEF void vtbar_initializeitems(vtb_ring_allocator* vtbra, int32_t items, in
 
 	vtbra->vtb__m_flags = 1;
 #else
+	sizeof_item = sizeof_item;
+	items = items;
+	vtbra = vtbra;
 	VTBAR__CHECK(false);
 #endif
 }
