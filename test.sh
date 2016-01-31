@@ -17,18 +17,6 @@ CommonReleaseCPPFlags="${CommonCPPFlags} -O2"
 CommonDebugCFlags="${CommonCFlags} -D_DEBUG"
 CommonReleaseCFlags="${CommonCFlags} -O2"
 
-#TEST VTB
-echo "testing vtb_memory_layout..."
-mkdir -p $ProjectOutputDir/o/vtb_memory_layout
-
-pushd $ProjectOutputDir/o/vtb_memory_layout > /dev/null
-
-clang $CommonInclude $CommonDebugCFlags $ProjectDir/tests/vtb_memory_layout.c -o $ProjectOutputDir/o/vtb_memory_layout_c $CommonLinkerFlags
-clang $CommonInclude $CommonDebugCPPFlags $ProjectDir/tests/vtb_memory_layout.cpp -o $ProjectOutputDir/o/vtb_memory_layout_cpp $CommonLinkerFlags
-
-$ProjectOutputDir/o/vtb_memory_layout_c || exit
-$ProjectOutputDir/o/vtb_memory_layout_cpp || exit
-
 # TEST VTB_ALLOC_RING
 echo "testing vtb_alloc_ring..."
 mkdir -p $ProjectOutputDir/o/vtb_alloc_ring
@@ -39,8 +27,13 @@ clang $CommonInclude $CommonDebugCFlags $ProjectDir/tests/vtb_alloc_ring.c -o $P
 clang $CommonInclude $CommonDebugCPPFlags $ProjectDir/tests/vtb_alloc_ring.cpp -o $ProjectOutputDir/o/vtb_alloc_ring_cpp $CommonLinkerFlags
 clang $CommonInclude $CommonDebugCPPFlags -DVTBAR_NO_MALLOC $ProjectDir/tests/vtb_alloc_ring.cpp -o $ProjectOutputDir/o/vtb_alloc_ring_cpp_nomalloc $CommonLinkerFlags
 
+echo "vtb_alloc_ring_c..."
 $ProjectOutputDir/o/vtb_alloc_ring_c || exit
+
+echo "vtb_alloc_ring_cpp..."
 $ProjectOutputDir/o/vtb_alloc_ring_cpp || exit
+
+echo "vtb_alloc_ring_cpp_nomalloc..."
 $ProjectOutputDir/o/vtb_alloc_ring_cpp_nomalloc || exit
 
 popd > /dev/null
