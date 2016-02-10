@@ -96,9 +96,9 @@ do { \
 	if (!(x)) \
 	VPRAGMA_WARNING_POP \
 	{ \
-		char buf[1024]; \
-		sprintf(buf, "Assert failed: %s (%s:%d)\n", #x, __FILE__, __LINE__); \
-		vtb_debug_print(buf); \
+		char vbuf[1024]; \
+		sprintf(vbuf, "Assert failed: %s (%s:%d)\n", #x, __FILE__, __LINE__); \
+		vtb_debug_print(vbuf); \
 		VDebugBreak(); \
 	} \
 	VPRAGMA_WARNING_PUSH \
@@ -344,7 +344,7 @@ VTBDEF void vtb_debug_print(const char* text)
 {
 	__android_log_print(ANDROID_LOG_INFO, "Debug", "%s", text);
 }
-#elif _MSC_VER
+#elif defined(_MSC_VER)
 #include <windows.h>
 VTBDEF void vtb_debug_print(const char* text)
 {
