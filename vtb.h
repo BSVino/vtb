@@ -269,6 +269,38 @@ inline long vmax(long a, long b)
 
 
 
+// VDefer - A defer statement for C++
+
+// Usage:
+// {
+//     void* p = malloc(123);
+//     VDefer(free(p));
+//     ... stuff
+// } <-- free(p) is run here at scope end.
+
+// http://the-witness.net/news/2012/11/scopeexit-in-c11/
+template <typename F>
+struct VDeferrer {
+    VDeferrer(F f) : f(f) {}
+    ~VDeferrer() { f(); }
+    F f;
+};
+
+template <typename F>
+VDeferrer<F> MakeVDeferrer(F f) {
+    return VDeferrer<F>(f);
+};
+
+// No idea why this much indirection is required.
+#define VStringConcat2(arg1, arg2) VStringJoin(arg1, arg2)
+#define VStringJoin(arg1, arg2) arg1 ## arg2
+
+#define VDefer(code) \
+    auto VStringConcat2(scope_exit_, __LINE__) = MakeVDeferrer([&](){code;})
+
+
+
+
 
 // VArraySize - A macro for anything defined in the format: type name[size];
 // VArraySize(name) will return size.
