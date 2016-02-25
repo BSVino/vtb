@@ -7,7 +7,7 @@ and modify this file as you see fit. No warranty is offered or implied.
 
 This is a simple and fast 32-bit hash function. It should not be
 used for anything that requires error correcting or security. It
-works great for hash tables and change detecting. It is reasonably
+works great for hash tables and error detecting. It is reasonably
 uniform over [0, 2^32-1], deterministic on its inputs, and small
 changes of the input will produce drastic changes of the output.
 Results are dependent on endianness. On my 2.2 Ghz processor I
@@ -15,7 +15,7 @@ can hash 4,525,199,690 bytes in 14.1 seconds, or about one hash
 per every 7 cycles.
 
 My two primary uses for vtb_hash are as a simple and fast hashing
-function and as a CRC-type check to see if data has changed.
+function and as a check to see if data has changed.
 
 Note: I don't guarantee that some string of bytes will always have
 the same hash over all future versions of this library. I may at
@@ -79,16 +79,16 @@ typedef struct
 // This just returns an initialized vtb_hash, and always the same one.
 VTBHDEF vtb_hash vtbh_new();
 
-VTBHDEF void vtbh_bytes(vtb_hash* h, const unsigned char* bytes, int num_bytes);
+VTBHDEF void vtbh_bytes(vtb_hash* h, const unsigned char* bytes, size_t num_bytes);
 VTBHDEF void vtbh_byte(vtb_hash* h, unsigned char byte);
 
-VTBHDEF void vtbh_ints(vtb_hash* h, unsigned int* ints, int num_ints);
+VTBHDEF void vtbh_ints(vtb_hash* h, unsigned int* ints, size_t num_ints);
 VTBHDEF void vtbh_int(vtb_hash* h, unsigned int i);
 
-VTBHDEF void vtbh_floats(vtb_hash* h, const float* floats, int num_floats);
+VTBHDEF void vtbh_floats(vtb_hash* h, const float* floats, size_t num_floats);
 VTBHDEF void vtbh_float(vtb_hash* h, float f);
 
-VTBHDEF void vtbh_string(vtb_hash* h, const char* s, int length);
+VTBHDEF void vtbh_string(vtb_hash* h, const char* s, size_t length);
 
 
 
@@ -111,7 +111,7 @@ VTBHDEF void vtbh_string(vtb_hash* h, const char* s, int length);
 #define VTBH__CHECK VTBH_ASSERT
 #endif
 
-VTBHDEF inline vtb_hash vtbh_new()
+VTBHDEF vtb_hash vtbh_new()
 {
 	vtb_hash h;
 
@@ -121,7 +121,7 @@ VTBHDEF inline vtb_hash vtbh_new()
 	return h;
 }
 
-VTBHDEF void vtbh_bytes(vtb_hash* h, const unsigned char* bytes, int num_bytes)
+VTBHDEF void vtbh_bytes(vtb_hash* h, const unsigned char* bytes, size_t num_bytes)
 {
 	uint32_t hash = h->hash;
 	uint32_t salt = h->salt;
@@ -158,7 +158,7 @@ VTBHDEF inline void vtbh_byte(vtb_hash* h, unsigned char byte)
 	vtbh_bytes(h, &byte, 1);
 }
 
-VTBHDEF void vtbh_ints(vtb_hash* h, unsigned int* ints, int num_ints)
+VTBHDEF void vtbh_ints(vtb_hash* h, unsigned int* ints, size_t num_ints)
 {
 	vtbh_bytes(h, (unsigned char*)ints, num_ints * sizeof(unsigned int));
 }
@@ -168,7 +168,7 @@ VTBHDEF void vtbh_int(vtb_hash* h, unsigned int i)
 	vtbh_bytes(h, (unsigned char*)&i, sizeof(unsigned int));
 }
 
-VTBHDEF void vtbh_floats(vtb_hash* h, const float* floats, int num_floats)
+VTBHDEF void vtbh_floats(vtb_hash* h, const float* floats, size_t num_floats)
 {
 	vtbh_bytes(h, (unsigned char*)floats, num_floats * sizeof(float));
 }
@@ -178,7 +178,7 @@ VTBHDEF void vtbh_float(vtb_hash* h, float f)
 	vtbh_bytes(h, (unsigned char*)&f, sizeof(float));
 }
 
-VTBHDEF void vtbh_string(vtb_hash* h, const char* s, int length)
+VTBHDEF void vtbh_string(vtb_hash* h, const char* s, size_t length)
 {
 	vtbh_bytes(h, (unsigned char*)s, length);
 }
