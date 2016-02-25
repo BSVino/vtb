@@ -238,6 +238,14 @@ int main()
 		printf("%x\n", samples[k]);
 	*/
 
+	// And now something crazy
+	float x = 123;
+	uint32_t y = *(uint32_t*)&x;
+	a = b = vtbh_new();
+	vtbh_int(&a, y);
+	vtbh_float(&b, x);
+	TEST(a.hash == b.hash);
+
 	return test;
 }
 
