@@ -41,7 +41,7 @@ COMPILING AND LINKING
 QUICK START
 	vtb_hash h = vtbh_new();
 
-	vtbh_string(&h, "string");
+	vtbh_string(&h, "string", 6);
 	vtbh_int(&h, 42);
 	vtbh_floats(&h, float_array, num_floats);
 
