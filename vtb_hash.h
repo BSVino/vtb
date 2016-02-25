@@ -7,12 +7,12 @@ and modify this file as you see fit. No warranty is offered or implied.
 
 This is a simple and fast 32-bit hash function. It should not be
 used for anything that requires error correcting or security. It
-works great for hash tables and change detecting. It is uniform
-over [0, 2^32-1], deterministic on its inputs, and small changes
-of the input will produce drastic changes of the output. Results
-are independent of endianness. On my 2.2 Ghz processor I can hash
-4,525,199,690 bytes in 14.1 seconds, or about one hash per every
-7 cycles.
+works great for hash tables and change detecting. It is reasonably
+uniform over [0, 2^32-1], deterministic on its inputs, and small
+changes of the input will produce drastic changes of the output.
+Results are independent of endianness. On my 2.2 Ghz processor I
+can hash 4,525,199,690 bytes in 14.1 seconds, or about one hash
+per every 7 cycles.
 
 My two primary uses for vtb_hash are as a simple and fast hashing
 function and as a CRC-type check to see if data has changed.

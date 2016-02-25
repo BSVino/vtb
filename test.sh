@@ -45,7 +45,7 @@ mkdir -p $ProjectOutputDir/o/vtb_hash
 pushd $ProjectOutputDir/o/vtb_hash > /dev/null
 
 clang $CommonInclude $CommonDebugCFlags $ProjectDir/tests/vtb_hash.c -o $ProjectOutputDir/o/vtb_hash_c $CommonLinkerFlags
-clang $CommonInclude $CommonReleaseCPPFlags $ProjectDir/tests/vtb_hash.cpp -o $ProjectOutputDir/o/vtb_hash_cpp $CommonLinkerFlags
+clang $CommonInclude $CommonDebugCPPFlags $ProjectDir/tests/vtb_hash.cpp -o $ProjectOutputDir/o/vtb_hash_cpp $CommonLinkerFlags
 
 echo "vtb_hash_c..."
 $ProjectOutputDir/o/vtb_hash_c || exit

@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
+#include <algorithm>
 
 const char* g_test;
 int g_line;
@@ -107,6 +109,8 @@ int main()
 	unsigned int* one_bucket = (unsigned int*)malloc(sizeof_one_bucket);
 	memset(one_bucket, 0, sizeof_one_bucket);
 
+	uint32_t* samples = (uint32_t*)malloc(num_tests * sizeof(uint32_t));
+
 	uint64_t even = 0;
 
 	uint64_t bytes_hashed = 0;
@@ -125,6 +129,8 @@ int main()
 		vtbh_bytes(&b, bytes, sizeof(bytes));
 
 		bytes_hashed += sizeof(bytes);
+
+		samples[k] = b.hash;
 
 		double sample = double(b.hash);
 
@@ -151,6 +157,7 @@ int main()
 		even += !(b.hash%2);
 	}
 
+	// Beautiful Testing ch 10, available from John Cook's website.
 	double max_value = double((uint32_t)~0);
 	double expected_mean = max_value/2;
 	double expected_variance = (1.0f/12)*(max_value*max_value);
@@ -197,6 +204,26 @@ int main()
 	double buckets_chi_squared_value = 527457.0340;
 
 	TEST(chi_sum < buckets_chi_squared_value);
+	if (chi_sum >= buckets_chi_squared_value)
+		printf("chi_sum: %f buckets_chi_squared_value: %f\n", chi_sum, buckets_chi_squared_value);
+
+	// I am so bad at getting C's qsort to work. Meh, this one's faster anyway.
+	std::sort(samples, samples + num_tests);
+
+	double kplus = 0;
+	double kminus = 0;
+	for (int k = 0; k < num_tests; k++)
+	{
+		double expected_samples_below = samples[k]*num_tests/max_value;
+		kplus = std::max(kplus, k - expected_samples_below);
+		kminus = std::max(kminus, expected_samples_below - k);
+	}
+
+	kplus *= sqrt(num_tests)/num_tests;
+	kminus *= sqrt(num_tests)/num_tests;
+
+	TEST(kplus >= 0.07089 && kplus <= 1.5174);
+	TEST(kminus >= 0.07089 && kminus <= 1.5174);
 
 	/*
 	for (int k = 0; k < num_buckets; k++)
@@ -204,6 +231,11 @@ int main()
 
 	for (int k = 0; k < VArraySize(one_bucket); k++)
 		printf("one_bucket[%d] = %u\n", k, one_bucket[k]);
+
+	for (int k = 0; k < 1000; k++)
+		printf("%x\n", samples[k]);
+	for (int k = num_tests-1000; k < num_tests; k++)
+		printf("%x\n", samples[k]);
 	*/
 
 	return test;
