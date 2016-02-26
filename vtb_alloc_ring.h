@@ -3,7 +3,7 @@ vtb_alloc_ring.h - public domain ring allocator
 
 This software is dual-licensed to the public domain and under the
 following license: you are granted a perpetual, irrevocable license
-to copy and modify this file as you see fit.
+to copy, modify, publish, and distribute this file as you see fit.
 
 This is a memory allocator implementing a ring buffer from a block of memory
 that you optionally provide. It has constant time alloc and free, making it a

@@ -3,7 +3,7 @@ vtb_hash.h - public domain hash function
 
 This software is dual-licensed to the public domain and under the
 following license: you are granted a perpetual, irrevocable license
-to copy and modify this file as you see fit.
+to copy, modify, publish, and distribute this file as you see fit.
 
 This is a simple and fast 32-bit hash function. It should not be
 used for anything that requires error correcting or security. It

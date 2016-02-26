@@ -1,9 +1,9 @@
 /*
 vtb.h - Vino's Tool Box
 
-This software is in the public domain. Where that dedication is not
-recognized, you are granted a perpetual, irrevocable license to copy
-and modify this file as you see fit. No warranty is offered or implied.
+This software is dual-licensed to the public domain and under the
+following license: you are granted a perpetual, irrevocable license
+to copy, modify, publish, and distribute this file as you see fit.
 
 This header file has a collection of useful utilities that I use often in my
 projects. You'll find most of this stuff in the header of any large project.
