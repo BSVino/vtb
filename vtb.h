@@ -217,25 +217,10 @@ VPRAGMA_WARNING_POP \
 
 
 
-inline int vmin(int a, int b)
-{
-	return (a < b) ? a : b;
-}
+#include <algorithm>
 
-inline int vmax(int a, int b)
-{
-	return (a > b) ? a : b;
-}
-
-inline long vmin(long a, long b)
-{
-	return (a < b) ? a : b;
-}
-
-inline long vmax(long a, long b)
-{
-	return (a > b) ? a : b;
-}
+#define vmin(a, b) std::min((a), (b))
+#define vmax(a, b) std::max((a), (b))
 
 
 
