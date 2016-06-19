@@ -40,6 +40,13 @@ COMPILING AND LINKING
 
 
 
+#ifdef __clang__
+#define VINLINE __attribute__((always_inline)) inline
+#else
+#error "Unsupported compiler"
+#endif
+
+
 // VDebugBreak - Forces a trap to break to the debugger
 
 #ifdef __GNUC__
@@ -246,9 +253,9 @@ VPRAGMA_WARNING_POP \
 #ifdef _MSC_VER
 // No VLA's. Use alloca()
 #include <malloc.h>
-#define VStackAllocate(type, name, bytes) type* name = (type*)alloca(bytes)
+#define VStackAllocate(type, name, size) type* name = (type*)alloca(size*sizeof(type))
 #else
-#define VStackAllocate(type, name, bytes) type name[bytes]
+#define VStackAllocate(type, name, size) type name[size]
 #endif
 
 
