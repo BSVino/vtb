@@ -92,7 +92,7 @@ VTBDEF void vtb_debug_print(const char* text);
 
 // VAssert(x) - Triggers a breakpoint if x is false.
 
-#ifdef _DEBUG
+#if !defined(VTB_DISABLE_ASSERTS)
 
 #include <stdio.h>
 
@@ -300,9 +300,10 @@ VDeferrer<F> MakeVDeferrer(F f) {
 #define VArraySize(x) (sizeof(x)/sizeof(x[0]))
 
 // Rounds x up to the nearest multiple of n. Useful for aligning memory.
-inline int VAlign(int x, int n)
+template<typename T>
+T VAlign(T x, T n)
 {
-	int over = x%n;
+	T over = x%n;
 	return over?(x+n-over):x;
 }
 
