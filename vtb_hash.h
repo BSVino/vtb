@@ -136,7 +136,8 @@ VTBHDEF void vtbh_bytes(vtb_hash* h, const unsigned char* bytes, size_t num_byte
 		top_byte = salt >> 31;
 		salt = ((salt << 1) | top_byte) + 1;
 
-		uint32_t filled = bytes[k]|(bytes[k]<<8)|(bytes[k]<<16)|(bytes[k]<<24);
+		uint32_t byte = bytes[k];
+		uint32_t filled = byte|(byte<<8)|(byte<<16)|(byte<<24);
 
 		// The extract part of MT, but with different numbers
 		filled ^= filled >> 10;
